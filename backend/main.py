@@ -63,6 +63,48 @@ def get_puuid_by_riot_id(game_name, tag_line):
     # Return just player PUUID from response data
     return data["puuid"]
 
+
+def get_match_ids_by_puuid(puuid, count=5):
+    """
+    This functions uses a player's PUUID to get their recent match IDs.
+
+    -puuid: player's unique Riot acc ID
+    -count: how many recent matches requested
+    """
+
+    # Region variable since Match-V5 uses regional routing endpoints
+    region = "americas"
+
+    # Builds Riot API URL to get recent match IDs by PUUID
+    url = (
+        f"https://{region}.api.riotgames.com"
+        f"/lol/match/v5/matches/by-puuid/{puuid}/ids"
+        f"?start=0&count={count}"
+    )
+
+    # Request headers to send API key to Riot
+    headers = {
+        "X-Riot-Token": RIOT_API_KEY
+    }
+
+    # GET request to Riot's Match API
+    response = requests.get(url, headers=headers)
+
+    # Print status code to see if request worked
+    print("Match IDs Status Code:", response.status_code)
+
+    # If successful response isn't returned, print error and function ends
+    if response.status_code != 200:
+        print("Error response:")
+        print(response.text)
+        return None
+    
+    # Convert JSON to list
+    data = response.json()
+
+    # Return match IDs
+    return data
+
 # Ran if only the file is ran directly
 if __name__ == "__main__":
 
@@ -79,3 +121,10 @@ if __name__ == "__main__":
     if puuid: 
         print("PUUID found:")
         print(puuid)
+
+        match_ids = get_match_ids_by_puuid(puuid, count=5)
+
+        if match_ids:
+            print("Recent Match IDS:")
+            for match_id in match_ids:
+                print(match_id)
