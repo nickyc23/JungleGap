@@ -169,11 +169,11 @@ if __name__ == "__main__":
                 print("Gold Earned:", player["goldEarned"])
                 print("Vision Score:", player["visionScore"])
                 print("Win:", player["win"])
-            else:
-                print("Player not found in this match.")
 
                 for key in player.keys():
                     print(key)
+            else:
+                print("Player not found in this match.")
         else:
             print("No match IDs found.")
     else: 
