@@ -105,6 +105,31 @@ def get_match_ids_by_puuid(puuid, count=5):
     # Return match IDs
     return data
 
+def get_match_details(match_id):
+    url = f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}"
+
+    headers = {
+        "X-Riot-Token": RIOT_API_KEY
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        raise Exception(f"Error getting match details: {response.status_code}, {response.text}")
+    
+    return response.json()
+
+def find_player_in_match(match_data, puuid):
+    participants = match_data["info"]["participants"]
+
+    for player in participants:
+        if player["puuid"] == puuid:
+            return player
+        
+    return None
+
+
+
 # Ran if only the file is ran directly
 if __name__ == "__main__":
 
@@ -128,3 +153,29 @@ if __name__ == "__main__":
             print("Recent Match IDS:")
             for match_id in match_ids:
                 print(match_id)
+
+            first_match_id = match_ids[0]
+
+            match_data = get_match_details(first_match_id)
+
+            player = find_player_in_match(match_data, puuid)
+
+            if player:
+                print("Player found in match:")
+                print("Champion:", player ["championName"])
+                print("Role:", player["teamPosition"])
+                print("KDA:", player["kills"], player["deaths"], player["assists"])
+                print("Neutral Minions Killed:", player["neutralMinionsKilled"])
+                print("Gold Earned:", player["goldEarned"])
+                print("Vision Score:", player["visionScore"])
+                print("Win:", player["win"])
+            else:
+                print("Player not found in this match.")
+
+                for key in player.keys():
+                    print(key)
+        else:
+            print("No match IDs found.")
+    else: 
+        print("No PUUID found.")
+
