@@ -106,20 +106,39 @@ def get_match_ids_by_puuid(puuid, count=5):
     return data
 
 def get_match_details(match_id):
+    """
+    Uses match ID to get full match details.
+
+    Example:
+    match_id = "NA1_12345768"
+
+    Returns JSON with game info
+    """
+
+    # Build Riot API URL to get match details
     url = f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}"
 
+    # Request headers to sen API key to Riot
     headers = {
         "X-Riot-Token": RIOT_API_KEY
     }
 
+    # Send GET request to Riot Match API 
     response = requests.get(url, headers=headers)
 
+    # If requests fails, show error message and stop program
     if response.status_code != 200:
         raise Exception(f"Error getting match details: {response.status_code}, {response.text}")
     
     return response.json()
 
 def find_player_in_match(match_data, puuid):
+    """
+    This function looks for the searched player in the match.
+
+    Match data has all 10 players, so player PUUID is used to find exact participant.
+    """
+
     participants = match_data["info"]["participants"]
 
     for player in participants:
@@ -128,7 +147,45 @@ def find_player_in_match(match_data, puuid):
         
     return None
 
+def extract_jungle_stats(player):
+    """
+    Takes player's match data and get stats for JungleGap.
 
+    Transforms Riot's large data dictionary into a smaller, cleaner version with just important jungle stats.
+    """
+
+    time_played_minutes = player["timePlayed"] / 60
+
+
+    stats = {
+        "champion": player["championName"],
+        "role": player["teamPosition"],
+        "win": player["win"],
+
+        "kills": player["kills"],
+        "deaths": player["deaths"],
+        "assists": player["assists"],
+
+        "gold_earned": player["goldEarned"],
+        "gold_per_min": round(player["goldEarned"] / time_played_minutes, 2),
+
+        "neutral_minions_killed": player["neutralMinionsKilled"],
+        "jungle_cs_per_min": round(player["neutralMinionsKilled"] / time_played_minutes, 2),
+
+        "vision_score": player["visionScore"],
+        "vision_score_per_min": round(player["visionScore"] / time_played_minutes, 2),
+
+        "damage_to_champions": player["totalDamageDealtToChampions"],
+        "damage_per_min": round(player["totalDamageDealtToChampions"] / time_played_minutes, 2),
+
+        "dragon_kills": player["dragonKills"],
+        "baron_kills": player["baronKills"],
+        "objectives_stolen": player["objectivesStolen"],
+
+        "time_played_minutes": time_played_minutes
+    }
+
+    return stats
 
 # Ran if only the file is ran directly
 if __name__ == "__main__":
@@ -161,17 +218,13 @@ if __name__ == "__main__":
             player = find_player_in_match(match_data, puuid)
 
             if player:
-                print("Player found in match:")
-                print("Champion:", player ["championName"])
-                print("Role:", player["teamPosition"])
-                print("KDA:", player["kills"], player["deaths"], player["assists"])
-                print("Neutral Minions Killed:", player["neutralMinionsKilled"])
-                print("Gold Earned:", player["goldEarned"])
-                print("Vision Score:", player["visionScore"])
-                print("Win:", player["win"])
+                print("Player found in match.")
 
-                for key in player.keys():
-                    print(key)
+                jungle_stats = extract_jungle_stats(player)
+
+                print("Jungle Stats:")
+                for stat_name, stat_value in jungle_stats.items():
+                    print(stat_name, ":", stat_value)
             else:
                 print("Player not found in this match.")
         else:
