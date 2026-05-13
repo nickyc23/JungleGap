@@ -211,24 +211,41 @@ if __name__ == "__main__":
             for match_id in match_ids:
                 print(match_id)
 
-            first_match_id = match_ids[0]
+            all_jungle_games = []
 
-            match_data = get_match_details(first_match_id)
+            for match_id in match_ids:
+                print("\nChecking match:", match_id)
 
-            player = find_player_in_match(match_data, puuid)
+                match_data = get_match_details(match_id)
 
-            if player:
-                print("Player found in match.")
+                player = find_player_in_match(match_data, puuid)
 
-                jungle_stats = extract_jungle_stats(player)
+                if player:
+                    print("Player found in match.")
 
-                print("Jungle Stats:")
-                for stat_name, stat_value in jungle_stats.items():
-                    print(stat_name, ":", stat_value)
-            else:
-                print("Player not found in this match.")
+
+                    if player["teamPosition"] == "JUNGLE":
+                        print("This was a jungle game.")
+
+                        jungle_stats = extract_jungle_stats(player)
+
+                        jungle_stats["match_id"] = match_id
+
+                        all_jungle_games.append(jungle_stats)
+
+                    else:
+                        print("Skipping match. Player role was:", player["teamPosition"])
+
+                else:
+                    print("Player not found in this match.")
+
+            print("\nTotal jungle games found:", len(all_jungle_games))
+
+            for game in all_jungle_games:
+                    print("\nJungle Game:")
+                    for stat_name, stat_value in game.items():
+                        print(stat_name, ":", stat_value)
         else:
             print("No match IDs found.")
-    else: 
-        print("No PUUID found.")
-
+    else:
+        print("No PUUID found.")               
